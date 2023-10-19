@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const express = require('express');
 const cors = require('cors');
@@ -15,52 +15,84 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 
 
 const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
+    serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+    }
 });
 
 async function run() {
-  try {
-    await client.connect();
-    const productsCollection = client.db('productDB').collection('product')
+    try {
+        await client.connect();
+        const productsCollection = client.db('productDB').collection('product')
 
 
-    app.get('/products', async(req, res)=>{
-        const cursor = productsCollection.find();
-        const result = await cursor.toArray();
-        res.send(result);
+        app.get('/products', async (req, res) => {
+            const cursor = productsCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
 
-    })
+        })
+
+        app.get('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await productsCollection.findOne(query);
+            res.send(result)
+
+        })
 
 
-    app.post('/products', async(req, res)=>{
-        const newProduct = req.body;
-        console.log(newProduct);
-        const result = await productsCollection.insertOne(newProduct);
-        res.send(result);
+        app.post('/products', async (req, res) => {
+            const newProduct = req.body;
+            console.log(newProduct);
+            const result = await productsCollection.insertOne(newProduct);
+            res.send(result);
 
-    })
+        })
+
+        app.put('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const options = { upsert: true };
+            const updatedProduct = req.body;
+
+            const newUpdatedProduct = {
+                $set: {
+                    name: updatedProduct.name,
+                    photo: updatedProduct.photo,
+                    brand: updatedProduct.brand,
+                    type: updatedProduct.type,
+                    price: updatedProduct.price,
+                    rating: updatedProduct.rating
+
+                }
+            }
+            const result = await productsCollection.updateOne(filter, newUpdatedProduct,
+                options);
+            res.send(result);
 
 
-    
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
-  }
+        })
+
+
+
+        await client.db("admin").command({ ping: 1 });
+        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    } finally {
+        // Ensures that the client will close when you finish/error
+        // await client.close();
+    }
 }
 run().catch(console.dir);
 
 
 
 
-app.get('/', (req, res)=>{
+app.get('/', (req, res) => {
     res.send('Brand car server is running')
 })
-app.listen(port, ()=>{
+app.listen(port, () => {
     console.log(`Bran car server is running on port: ${port}`);
 })
