@@ -26,6 +26,7 @@ async function run() {
     try {
         await client.connect();
         const productsCollection = client.db('productDB').collection('product')
+        const userCollection = client.db('productDB').collection('user')
 
 
         app.get('/products', async (req, res) => {
@@ -51,6 +52,17 @@ async function run() {
             res.send(result);
 
         })
+        
+        //  user related
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            console.log(user);
+            const result = await productsCollection.insertOne(user);
+            res.send(result);
+
+        })
+
+
 
         app.put('/products/:id', async (req, res) => {
             const id = req.params.id;
