@@ -26,7 +26,7 @@ async function run() {
     try {
         await client.connect();
         const productsCollection = client.db('productDB').collection('product')
-        const userCollection = client.db('productDB').collection('user')
+        const cartProductsCollection = client.db('productDB').collection('productCart')
 
 
         app.get('/products', async (req, res) => {
@@ -44,6 +44,14 @@ async function run() {
 
         })
 
+        app.get('/user-products/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {user_id: id};
+            console.log('hitting user-products');
+            const result = await cartProductsCollection.findOne(query);
+            res.send(result);
+        })
+
 
         app.post('/products', async (req, res) => {
             const newProduct = req.body;
@@ -52,13 +60,30 @@ async function run() {
             res.send(result);
 
         })
-        
+
         //  user related
-        app.post('/users', async (req, res) => {
-            const user = req.body;
-            console.log(user);
-            const result = await productsCollection.insertOne(user);
-            res.send(result);
+        
+
+        app.put('/user-products/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = {user_id: id};
+            const cartProduct = req.body;
+
+            const doesExist = await cartProductsCollection.findOne(filter);
+            if(doesExist){
+                const options = {upsert: true};
+                const newCartProduct = {
+                    $set:{
+                        user_id: cartProduct.user_id,
+                        newUniqueCart: cartProduct.newUniqueCart
+                    }
+                }
+                const updateResult = await cartProductsCollection.updateOne(filter, newCartProduct, options);
+                res.send(updateResult);
+            }else{
+                const insertResult = await cartProductsCollection.insertOne(cartProduct);
+                res.send(insertResult)
+            }
 
         })
 
