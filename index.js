@@ -24,7 +24,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
-        await client.connect();
+        // await client.connect();
         const productsCollection = client.db('productDB').collection('product')
         const cartProductsCollection = client.db('productDB').collection('productCart')
 
@@ -47,7 +47,6 @@ async function run() {
         app.get('/user-products/:id', async (req, res) => {
             const id = req.params.id;
             const query = {user_id: id};
-            console.log('hitting user-products');
             const result = await cartProductsCollection.findOne(query);
             res.send(result);
         })
@@ -115,7 +114,7 @@ async function run() {
 
 
 
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         
